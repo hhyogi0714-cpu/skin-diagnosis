@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>肌年齢診断 - Skin Age Diagnosis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Shippori+Mincho:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Start Screen -->
+        <section id="start-screen" class="screen active">
+            <div class="content-wrapper">
+                <h1 class="title">Skin Age Diagnosis</h1>
+                <p class="subtitle">老化リスクと肌年齢を徹底診断</p>
+                <div class="input-group">
+                    <label for="user-age">現在の年齢を入力してください</label>
+                    <input type="number" id="user-age" placeholder="例: 50" min="10" max="100">
+                </div>
+                <button id="start-btn" class="primary-btn">診断を始める</button>
+            </div>
+        </section>
+
+        <!-- Question Screen -->
+        <section id="question-screen" class="screen hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="content-wrapper">
+                <div class="question-number">Q <span id="q-current">1</span> / <span id="q-total">--</span></div>
+                <h2 id="question-text" class="question-text">質問読み込み中...</h2>
+                <div id="options-container" class="options-container">
+                    <!-- Options will be generated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Screen -->
+        <section id="loading-screen" class="screen hidden">
+            <div class="content-wrapper">
+                <div class="loader"></div>
+                <p class="loading-text">肌データを分析中...</p>
+            </div>
+        </section>
+
+        <!-- Result Screen -->
+        <section id="result-screen" class="screen hidden">
+            <div class="content-wrapper">
+                <p class="result-intro">あなたの肌年齢は...</p>
+                <div class="result-circle">
+                    <span id="result-age" class="result-age">--</span>
+                    <span class="age-unit">歳</span>
+                </div>
+
+                <!-- Radar Chart Section -->
+                <div class="chart-container">
+                    <canvas id="radarChart" width="300" height="300"></canvas>
+                </div>
+
+                <!-- Advice Section -->
+                <div id="advice-container" class="advice-container">
+                    <h3 id="advice-title" class="advice-title">診断タイトル</h3>
+                    <p id="advice-message" class="advice-message">メッセージ本文</p>
+
+                    <div class="advice-grid">
+                        <div class="advice-card">
+                            <h4 class="card-title">💆‍♀️ 身体的な対策</h4>
+                            <ul id="advice-physical" class="advice-list"></ul>
+                        </div>
+                        <div class="advice-card">
+                            <h4 class="card-title">🧴 おすすめスキンケア</h4>
+                            <ul id="advice-skincare" class="advice-list"></ul>
+                        </div>
+                        <div class="advice-card">
+                            <h4 class="card-title">🥗 おすすめの食べ物</h4>
+                            <ul id="advice-food" class="advice-list"></ul>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="retake-btn" class="secondary-btn">ホームに戻る</button>
+            </div>
+        </section>
+    </div>
+    <!-- Simple manual chart rendering script will be inside script.js, so no external lib needed yet -->
+    <script src="questions.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
