@@ -161,69 +161,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // Camera Logic (Hybrid Strategy)
     // ------------------------------------------
 
+    const startCameraCrtBtn = document.getElementById('start-camera-crt-btn');
+    const cameraErrorLog = document.getElementById('camera-error-log');
+
     // ------------------------------------------
-    // Camera Logic (Simplified Native)
+    // Camera Method 1: WebRTC (App-like)
     // ------------------------------------------
+    startCameraCrtBtn.addEventListener('click', async () => {
+        cameraErrorLog.style.display = 'none';
+        cameraErrorLog.textContent = "";
+        const note = document.querySelector('.camera-note');
+        if (note) note.textContent = "カメラを起動しています...";
 
-    // Note: The "Start Camera" button is now a <label> linked to the file input.
-    // This allows the browser to handle the "User Gesture" -> "Camera Launch" 
-    // strictly natively, avoiding any JavaScript context loss issues.
+        try {
+            await startCameraWebRTC();
+        } catch (err) {
+            console.error(err);
+            if (note) note.textContent = "起動エラー";
 
-    // File Input Handler
-    cameraFileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
+            // Show error to user for troubleshooting
+            cameraErrorLog.style.display = 'block';
+            cameraErrorLog.textContent = "カメラ起動エラー: " + err.message + "\n「通常カメラで撮影」をお試しください。";
 
-            reader.onload = function (e) {
-                // Show preview image
-                showPreview(e.target.result);
-
-                // Auto-progress
-                setTimeout(() => {
-                    finishDiagnosis(true);
-                }, 1500);
-            }
-            reader.readAsDataURL(file);
+            // Note: We do NOT auto-fallback here to avoid confusion. User sees error and clicks other button.
         }
     });
 
-    function showPreview(imageSrc) {
-        cameraPlaceholder.style.display = 'none';
-        cameraFeed.style.display = 'none';
-        cameraPreviewImg.src = imageSrc;
-        cameraPreviewImg.style.display = 'block';
-        faceGuide.style.display = 'block';
-        cameraControls.style.display = 'flex';
+    async function startCameraWebRTC() {
+        stopCamera();
 
-        // Hide shutter button in preview mode (since we already have the image)
-        shutterBtn.style.display = 'none';
+        // Check if API exists
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            throw new Error("このブラウザはWebカメラAPIに対応していません");
+        }
 
-        const note = document.querySelector('.camera-note');
-        if (note) note.textContent = "画像を解析しています...";
+        const constraintsVariants = [
+            { video: { facingMode: 'user' }, audio: false },
+            { video: true, audio: false }
+        ];
+
+        for (const constraints of constraintsVariants) {
+            try {
+                cameraPlaceholder.style.display = 'none';
+                cameraFeed.style.display = 'block';
+                cameraFeed.setAttribute('playsinline', '');
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+                cameraFeed.srcObject = stream;
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    cameraFeed.onloadedmetadata = () => {
+                        resolve();
+                    };
+                });
+                await cameraFeed.play();
+
+                onCameraSuccess();
+                return;
+            } catch (err) {
+                console.warn("Constraint failed:", err);
+                // Clean up fail
+                cameraFeed.style.display = 'none';
+                cameraPlaceholder.style.display = 'flex';
+            }
+        }
+        throw new Error("カメラへのアクセスが拒否されたか、利用できません。");
     }
 
-    // File Input Handler (Fallback)
-    cameraFileInput.addEventListener('change', (e) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function (e) {
-                // Show preview image
-                showPreview(e.target.result);
-
-                // Auto-progress
-                setTimeout(() => {
-                    finishDiagnosis(true);
-                }, 1500);
-            }
-            reader.readAsDataURL(file);
-        }
-    });
-
-    function onCameraSuccess(stream) {
-        // UI is already updated in startCameraWebRTC, but ensure final state
+    function onCameraSuccess() {
         cameraPlaceholder.style.display = 'none';
         cameraFeed.style.display = 'block';
         cameraPreviewImg.style.display = 'none';
