@@ -161,56 +161,47 @@ document.addEventListener('DOMContentLoaded', () => {
     // Camera Logic (Hybrid Strategy)
     // ------------------------------------------
 
-    async function startCameraWebRTC() {
-        stopCamera();
+    // ------------------------------------------
+    // Camera Logic (Simplified Native)
+    // ------------------------------------------
 
-        const constraintsVariants = [
-            // 1. Simplest User Facing (Most reliable)
-            { video: { facingMode: 'user' }, audio: false },
-            // 2. Ideal resolution (Secondary attempt)
-            { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
-            // 3. Fallback to any camera
-            { video: true, audio: false }
-        ];
+    // Note: The "Start Camera" button is now a <label> linked to the file input.
+    // This allows the browser to handle the "User Gesture" -> "Camera Launch" 
+    // strictly natively, avoiding any JavaScript context loss issues.
 
-        for (const constraints of constraintsVariants) {
-            try {
-                // Ensure video element is visible and ready
-                cameraPlaceholder.style.display = 'none';
-                cameraFeed.style.display = 'block';
-                cameraFeed.setAttribute('playsinline', ''); // Force attribute
+    // File Input Handler
+    cameraFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
 
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-                onCameraSuccess(stream);
-                return; // Success
-            } catch (err) {
-                console.warn("Constraint failed:", constraints, err);
+            reader.onload = function (e) {
+                // Show preview image
+                showPreview(e.target.result);
 
-                // Reset UI for next attempt
-                cameraFeed.style.display = 'none';
-                cameraPlaceholder.style.display = 'flex';
-
-                // If this was the last constraint and it failed, throw error
+                // Auto-progress
+                setTimeout(() => {
+                    finishDiagnosis(true);
+                }, 1500);
             }
-        }
-
-        throw new Error("All WebRTC attempts failed");
-    }
-
-    // Unified Camera Handler
-    startCameraBtn.addEventListener('click', async () => {
-        const note = document.querySelector('.camera-note');
-        if (note) note.textContent = "カメラを起動しています...";
-
-        try {
-            await startCameraWebRTC();
-        } catch (err) {
-            console.log("WebRTC failed, switching to native input...", err);
-            // Silently trigger fallback without alert (User preference: "Just work")
-            cameraFileInput.click();
-            if (note) note.textContent = "写真を選択または撮影してください";
+            reader.readAsDataURL(file);
         }
     });
+
+    function showPreview(imageSrc) {
+        cameraPlaceholder.style.display = 'none';
+        cameraFeed.style.display = 'none';
+        cameraPreviewImg.src = imageSrc;
+        cameraPreviewImg.style.display = 'block';
+        faceGuide.style.display = 'block';
+        cameraControls.style.display = 'flex';
+
+        // Hide shutter button in preview mode (since we already have the image)
+        shutterBtn.style.display = 'none';
+
+        const note = document.querySelector('.camera-note');
+        if (note) note.textContent = "画像を解析しています...";
+    }
 
     // File Input Handler (Fallback)
     cameraFileInput.addEventListener('change', (e) => {

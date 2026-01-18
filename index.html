@@ -53,12 +53,15 @@
                     <div id="camera-placeholder" class="camera-placeholder">
                         <div
                             style="display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; padding: 1rem;">
-                            <button id="start-camera-btn" class="primary-btn"
-                                style="font-size: 1rem; padding: 1rem 2rem; width: 100%;">カメラを起動する</button>
-                            <p style="color: #999; font-size: 0.8rem; margin-top: 0.5rem;">
-                                ※カメラの許可を求められた場合は「許可」を選択してください。<br>※起動しない場合はファイル選択画面から「カメラ」または「写真を撮る」を選んでください。</p>
+                            <label for="camera-file-input" class="primary-btn"
+                                style="font-size: 1rem; padding: 1rem 2rem; width: 100%; display: flex; justify-content: center; align-items: center; cursor: pointer;">
+                                カメラを起動する
+                            </label>
+                            <p style="color: #999; font-size: 0.8rem; margin-top: 0.5rem;">※ タップするとカメラが起動します。<br>※
+                                起動しない場合は「カメラ」または「写真を撮る」を選択してください。</p>
                         </div>
-                        <input type="file" id="camera-file-input" accept="image/*" capture="user"
+                        <!-- Use label to trigger this input directly to avoid JS 'user gesture' issues -->
+                        <input type="file" id="camera-file-input" accept="image/*" capture="environment"
                             style="display: none;">
                     </div>
                     <img id="camera-preview-img"
