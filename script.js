@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const startScreen = document.getElementById('start-screen');
     const questionScreen = document.getElementById('question-screen');
+    const cameraScreen = document.getElementById('camera-screen');
     const loadingScreen = document.getElementById('loading-screen');
     const resultScreen = document.getElementById('result-screen');
 
@@ -14,6 +15,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionText = document.getElementById('question-text');
     const optionsContainer = document.getElementById('options-container');
 
+    const cameraFeed = document.getElementById('camera-feed');
+    const cameraCanvas = document.getElementById('camera-canvas');
+    const shutterBtn = document.getElementById('shutter-btn');
+
     const resultAge = document.getElementById('result-age');
     const adviceTitle = document.getElementById('advice-title');
     const adviceMessage = document.getElementById('advice-message');
@@ -21,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const advicePhysical = document.getElementById('advice-physical');
     const adviceSkincare = document.getElementById('advice-skincare');
     const adviceFood = document.getElementById('advice-food');
-    const adviceExosome = document.getElementById('advice-exosome'); // New Element
+    const adviceExosome = document.getElementById('advice-exosome');
 
     const retakeBtn = document.getElementById('retake-btn');
     const radarCanvas = document.getElementById('radarChart');
@@ -29,8 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // State
     let currentQuestionIndex = 0;
     let totalScore = 0;
-
-    // 5 Axes Scores (initialized to 0)
     let axisScores = {
         firmness: 0,
         brightness: 0,
@@ -38,8 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
         glycation: 0,
         lifestyle: 0
     };
-
     let userAge = 0;
+    let stream = null; // Camera stream
 
     // Initialize
     function init() {
@@ -52,7 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Navigation Functions
     function showScreen(screen) {
-        [startScreen, questionScreen, loadingScreen, resultScreen].forEach(s => {
+        // Stop camera if leaving camera screen
+        if (screen !== cameraScreen && stream) {
+            stopCamera();
+        }
+
+        [startScreen, questionScreen, cameraScreen, loadingScreen, resultScreen].forEach(s => {
             s.classList.remove('active');
             s.classList.add('hidden');
             setTimeout(() => {
@@ -78,7 +86,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         userAge = inputAge;
         totalScore = 0;
-        // Reset scores
         axisScores = { firmness: 0, brightness: 0, moisture: 0, glycation: 0, lifestyle: 0 };
         currentQuestionIndex = 0;
         showScreen(questionScreen);
@@ -107,7 +114,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.1}s`;
                 btn.style.opacity = 0;
 
-                // Pass axis to handleAnswer
                 btn.addEventListener('click', () => handleAnswer(option.score, question.axis));
                 optionsContainer.appendChild(btn);
             });
@@ -128,25 +134,78 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentQuestionIndex < questions.length) {
             renderQuestion();
         } else {
-            finishDiagnosis();
+            // Questions finished, go to Camera Screen
+            startCameraSequence();
         }
     }
 
-    function finishDiagnosis() {
-        progressFill.style.width = '100%';
-        showScreen(loadingScreen);
-        setTimeout(() => {
-            showResult();
-        }, 2000);
+    // ------------------------------------------
+    // Camera Logic
+    // ------------------------------------------
+    function startCameraSequence() {
+        showScreen(cameraScreen);
+        startCamera();
     }
 
+    async function startCamera() {
+        try {
+            stream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'user' },
+                audio: false
+            });
+            cameraFeed.srcObject = stream;
+        } catch (err) {
+            console.error("Camera access denied:", err);
+            alert("カメラへのアクセスが許可されませんでした。診断を続行しますが、画像解析はスキップされます。");
+            finishDiagnosis(false); // Skip camera analysis
+        }
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+    }
+
+    shutterBtn.addEventListener('click', () => {
+        // Capture logic
+        if (stream) {
+            // Flash effect or sound here could be added
+            finishDiagnosis(true); // Analyze
+        } else {
+            finishDiagnosis(false);
+        }
+    });
+
     // ------------------------------------------
-    // 10 Type Logic & Chart Rendering
+    // Result Logic
     // ------------------------------------------
+    function finishDiagnosis(withCameraAnalysis) {
+        stopCamera();
+        progressFill.style.width = '100%';
+        showScreen(loadingScreen);
+
+        // Mock Analysis Simulation
+        setTimeout(() => {
+            // Adjust score slightly based on "Camera Analysis" (Mock)
+            // In a real app, you'd send the image to a server API here.
+            // For now, we simulate a slight variation to make it feel dynamic.
+            if (withCameraAnalysis) {
+                // Random adjustment: -1 to +2 to total score (simulate captured skin condition)
+                const mockAdjustment = Math.floor(Math.random() * 4) - 1;
+                totalScore += mockAdjustment;
+
+                // Ensure score boundaries
+                if (totalScore < 0) totalScore = 0;
+            }
+
+            showResult();
+        }, 3000); // 3 seconds "Analysis" time
+    }
+
     function determineDiagnosisType() {
         const s = axisScores;
-
-        // Define max scores based on questions.js distribution
         const isHigh = (score, max) => score >= (max * 0.5); // >= half bad
 
         const highFirmness = isHigh(s.firmness, 9);
@@ -157,18 +216,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const weakCount = [highFirmness, highMoisture, highBrightness, highLifestyle, highGlycation].filter(Boolean).length;
 
-        // 1. Crisis
         if (weakCount >= 4 || totalScore >= 30) return 'crisis';
-
-        // 2. Diamond (Perfect)
         if (totalScore <= 5 && weakCount === 0) return 'diamond';
-
-        // 3. Composite Types (Priority Logic)
         if (highFirmness && highBrightness) return 'sagging_spots';
         if (highFirmness && highGlycation) return 'sagging_glycation';
         if (highBrightness && highGlycation) return 'spots_glycation';
 
-        // 4. Single Risks (Priority Logic: highest ratio)
         const ratios = {
             firmness: s.firmness / 9,
             moisture: s.moisture / 9,
@@ -180,20 +233,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxRatio = Math.max(...Object.values(ratios));
         const worstAxis = Object.keys(ratios).find(k => ratios[k] === maxRatio);
 
-        if (maxRatio < 0.3) return 'pre_aging'; // Low risk overall
+        if (maxRatio < 0.3) return 'pre_aging';
 
-        // Single Types mapping
         if (worstAxis === 'firmness') return 'sagging';
         if (worstAxis === 'brightness') return 'spots';
         if (worstAxis === 'moisture') return 'dryness';
         if (worstAxis === 'glycation') return 'glycation';
         if (worstAxis === 'lifestyle') return 'pre_aging';
 
-        return 'pre_aging'; // Fallback
+        return 'pre_aging';
     }
 
     function showResult() {
-        // Age Calc
         let ageDiff = 0;
         if (totalScore <= 5) ageDiff = -5;
         else if (totalScore <= 15) ageDiff = -2 + ((totalScore - 6) / 9 * 4);
@@ -202,23 +253,19 @@ document.addEventListener('DOMContentLoaded', () => {
         let calculatedAge = Math.round(userAge + ageDiff);
         if (calculatedAge < 18) calculatedAge = 18;
 
-        // Determine Type
         const diagnosisType = determineDiagnosisType();
         const advice = advices[diagnosisType];
 
-        // Render Text
         adviceTitle.textContent = advice.title;
         adviceMessage.textContent = advice.message;
         advicePhysical.innerHTML = advice.advice_physical;
         adviceSkincare.innerHTML = advice.advice_skincare;
         adviceFood.innerHTML = advice.advice_food;
 
-        // Render Exosome Advice
         if (adviceExosome && advice.advice_exosome) {
             adviceExosome.textContent = advice.advice_exosome;
         }
 
-        // Render Chart
         drawRadarChart(axisScores);
 
         showScreen(resultScreen);

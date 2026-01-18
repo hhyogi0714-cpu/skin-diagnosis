@@ -43,6 +43,25 @@
             </div>
         </section>
 
+        <!-- Camera Screen -->
+        <section id="camera-screen" class="screen hidden">
+            <div class="content-wrapper camera-wrapper">
+                <h2 class="title" style="font-size: 1.5rem; margin-bottom: 1rem;">肌の状態をスキャン</h2>
+                <p class="subtitle" style="margin-bottom: 1.5rem;">枠内に顔を合わせて撮影してください</p>
+
+                <div class="camera-container">
+                    <video id="camera-feed" autoplay playsinline muted></video>
+                    <div class="face-guide"></div>
+                    <canvas id="camera-canvas" style="display: none;"></canvas>
+                </div>
+
+                <div class="camera-controls">
+                    <button id="shutter-btn" class="shutter-btn"></button>
+                    <p class="camera-note">※ 画像はサーバーには保存されません</p>
+                </div>
+            </div>
+        </section>
+
         <!-- Loading Screen -->
         <section id="loading-screen" class="screen hidden">
             <div class="content-wrapper">

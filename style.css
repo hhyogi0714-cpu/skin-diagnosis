@@ -245,6 +245,110 @@ input[type="number"]:focus {
     transform: translateX(5px);
 }
 
+/* Camera Screen styles */
+.camera-wrapper {
+    justify-content: flex-start;
+    padding-top: 4rem;
+}
+
+.camera-container {
+    width: 100%;
+    max-width: 320px;
+    height: 400px;
+    position: relative;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+#camera-feed {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+    /* Mirror effect */
+}
+
+.face-guide {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 220px;
+    height: 300px;
+    border: 2px dashed rgba(255, 255, 255, 0.6);
+    border-radius: 50% 50% 60% 60%;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+}
+
+.face-guide::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: inherit;
+    border: 2px solid transparent;
+    animation: guidePulse 2s infinite;
+}
+
+@keyframes guidePulse {
+    0% {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    50% {
+        border-color: rgba(178, 150, 125, 0.8);
+    }
+
+    100% {
+        border-color: rgba(255, 255, 255, 0.3);
+    }
+}
+
+.camera-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.shutter-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid #E6D2C4;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+}
+
+.shutter-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 55px;
+    height: 55px;
+    background: var(--primary-color);
+    border-radius: 50%;
+}
+
+.shutter-btn:active {
+    transform: scale(0.95);
+}
+
+.camera-note {
+    font-size: 0.8rem;
+    color: #999;
+}
+
 /* Loading */
 .loader {
     width: 60px;
