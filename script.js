@@ -15,8 +15,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const questionText = document.getElementById('question-text');
     const optionsContainer = document.getElementById('options-container');
 
+    // Camera Elements
     const cameraFeed = document.getElementById('camera-feed');
-    const cameraCanvas = document.getElementById('camera-canvas');
+    const cameraPlaceholder = document.getElementById('camera-placeholder');
+    const startCameraBtn = document.getElementById('start-camera-btn');
+    const faceGuide = document.querySelector('.face-guide');
+    const cameraControls = document.querySelector('.camera-controls');
     const shutterBtn = document.getElementById('shutter-btn');
 
     const resultAge = document.getElementById('result-age');
@@ -135,30 +139,65 @@ document.addEventListener('DOMContentLoaded', () => {
             renderQuestion();
         } else {
             // Questions finished, go to Camera Screen
-            startCameraSequence();
+            showScreen(cameraScreen);
+            // Don't auto-start camera. Reset to placeholder state.
+            resetCameraUI();
         }
+    }
+
+    function resetCameraUI() {
+        cameraPlaceholder.style.display = 'flex';
+        cameraFeed.style.display = 'none';
+        faceGuide.style.display = 'none';
+        cameraControls.style.display = 'none';
     }
 
     // ------------------------------------------
     // Camera Logic
     // ------------------------------------------
-    function startCameraSequence() {
-        showScreen(cameraScreen);
-        startCamera();
-    }
+
+    // Explicit User Gesture Handler
+    startCameraBtn.addEventListener('click', async () => {
+        await startCamera();
+    });
 
     async function startCamera() {
         try {
+            // First try with ideal constraints
             stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: 'user' },
+                video: {
+                    facingMode: 'user',
+                    width: { ideal: 640 },
+                    height: { ideal: 480 }
+                },
                 audio: false
             });
-            cameraFeed.srcObject = stream;
+            onCameraSuccess(stream);
         } catch (err) {
-            console.error("Camera access denied:", err);
-            alert("カメラへのアクセスが許可されませんでした。診断を続行しますが、画像解析はスキップされます。");
-            finishDiagnosis(false); // Skip camera analysis
+            console.warn("User facing camera failed, trying fallback...", err);
+            try {
+                // Fallback: try without excessive constraints
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: false
+                });
+                onCameraSuccess(stream);
+            } catch (err2) {
+                console.error("Camera access denied:", err2);
+                alert("カメラへのアクセスが許可されませんでした。設定を確認してください。\n診断は続行しますが、画像解析はスキップされます。");
+                finishDiagnosis(false);
+            }
         }
+    }
+
+    function onCameraSuccess(stream) {
+        cameraFeed.srcObject = stream;
+
+        // Update UI
+        cameraPlaceholder.style.display = 'none';
+        cameraFeed.style.display = 'block';
+        faceGuide.style.display = 'block';
+        cameraControls.style.display = 'flex';
     }
 
     function stopCamera() {
@@ -169,9 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     shutterBtn.addEventListener('click', () => {
-        // Capture logic
         if (stream) {
-            // Flash effect or sound here could be added
             finishDiagnosis(true); // Analyze
         } else {
             finishDiagnosis(false);
@@ -186,27 +223,19 @@ document.addEventListener('DOMContentLoaded', () => {
         progressFill.style.width = '100%';
         showScreen(loadingScreen);
 
-        // Mock Analysis Simulation
         setTimeout(() => {
-            // Adjust score slightly based on "Camera Analysis" (Mock)
-            // In a real app, you'd send the image to a server API here.
-            // For now, we simulate a slight variation to make it feel dynamic.
             if (withCameraAnalysis) {
-                // Random adjustment: -1 to +2 to total score (simulate captured skin condition)
                 const mockAdjustment = Math.floor(Math.random() * 4) - 1;
                 totalScore += mockAdjustment;
-
-                // Ensure score boundaries
                 if (totalScore < 0) totalScore = 0;
             }
-
             showResult();
-        }, 3000); // 3 seconds "Analysis" time
+        }, 3000);
     }
 
     function determineDiagnosisType() {
         const s = axisScores;
-        const isHigh = (score, max) => score >= (max * 0.5); // >= half bad
+        const isHigh = (score, max) => score >= (max * 0.5);
 
         const highFirmness = isHigh(s.firmness, 9);
         const highMoisture = isHigh(s.moisture, 9);

@@ -50,12 +50,16 @@
                 <p class="subtitle" style="margin-bottom: 1.5rem;">枠内に顔を合わせて撮影してください</p>
 
                 <div class="camera-container">
-                    <video id="camera-feed" autoplay playsinline muted></video>
-                    <div class="face-guide"></div>
+                    <div id="camera-placeholder" class="camera-placeholder">
+                        <button id="start-camera-btn" class="primary-btn"
+                            style="font-size: 0.9rem; padding: 0.8rem 2rem;">カメラを起動する</button>
+                    </div>
+                    <video id="camera-feed" autoplay playsinline muted style="display: none;"></video>
+                    <div class="face-guide" style="display: none;"></div>
                     <canvas id="camera-canvas" style="display: none;"></canvas>
                 </div>
 
-                <div class="camera-controls">
+                <div class="camera-controls" style="display: none;">
                     <button id="shutter-btn" class="shutter-btn"></button>
                     <p class="camera-note">※ 画像はサーバーには保存されません</p>
                 </div>
