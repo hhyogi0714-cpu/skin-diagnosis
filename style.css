@@ -1,18 +1,16 @@
 :root {
-    --primary-color: #B2967D;
-    /* Antique Gold/Beige */
-    --secondary-color: #E6D2C4;
-    /* Soft Pinkish Beige */
-    --accent-color: #A67B5B;
-    /* Darker Brown/Gold */
-    --background-color: #FDFBF7;
-    /* Off-white */
+    --primary-color: #B2967D; /* Antique Gold/Beige */
+    --secondary-color: #E6D2C4; /* Soft Pinkish Beige */
+    --accent-color: #A67B5B; /* Darker Brown/Gold */
+    --background-color: #FDFBF7; /* Off-white */
     --text-color: #4A4A4A;
     --white: #ffffff;
     --font-main: 'Shippori Mincho', serif;
     --font-ui: 'Noto Sans JP', sans-serif;
     --shadow: 0 4px 20px rgba(178, 150, 125, 0.15);
     --border-radius: 16px;
+    --premium-gold: #D4AF37;
+    --premium-bg: #FFFAEE;
 }
 
 * {
@@ -31,7 +29,7 @@ body {
     align-items: center;
     min-height: 100vh;
     background-image: radial-gradient(circle at 10% 20%, rgba(230, 210, 196, 0.4) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(178, 150, 125, 0.3) 0%, transparent 20%);
+                      radial-gradient(circle at 90% 80%, rgba(178, 150, 125, 0.3) 0%, transparent 20%);
 }
 
 .app-container {
@@ -42,7 +40,7 @@ body {
     box-shadow: var(--shadow);
     position: relative;
     overflow: hidden;
-    overflow-y: auto;
+    overflow-y: auto; 
 }
 
 @media (min-width: 481px) {
@@ -61,14 +59,11 @@ body {
     justify-content: center;
     align-items: center;
     text-align: center;
-    padding-bottom: 4rem;
-    /* Extra space for scrolling */
+    padding-bottom: 4rem; /* Extra space for scrolling */
 }
 
 /* Typography */
-h1,
-h2,
-.result-intro {
+h1, h2, .result-intro {
     font-family: var(--font-main);
     color: var(--accent-color);
 }
@@ -117,8 +112,7 @@ input[type="number"]:focus {
     box-shadow: 0 0 0 3px rgba(178, 150, 125, 0.1);
 }
 
-.primary-btn,
-.secondary-btn {
+.primary-btn, .secondary-btn {
     padding: 1rem 3rem;
     border: none;
     border-radius: 50px;
@@ -202,7 +196,7 @@ input[type="number"]:focus {
     font-size: 1.3rem;
     margin-bottom: 2rem;
     line-height: 1.5;
-    min-height: 3em;
+    min-height: 3em; 
 }
 
 .options-container {
@@ -246,9 +240,7 @@ input[type="number"]:focus {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
 .loading-text {
@@ -271,16 +263,13 @@ input[type="number"]:focus {
     margin: 0 auto 1rem;
     position: relative;
     background: radial-gradient(circle at 30% 30%, #fff 0%, #FAFAFA 100%);
-    box-shadow: 10px 10px 30px #d1d1d1, -10px -10px 30px #ffffff;
+    box-shadow:  10px 10px 30px #d1d1d1, -10px -10px 30px #ffffff;
 }
 
 .result-circle::before {
     content: '';
     position: absolute;
-    top: -5px;
-    left: -5px;
-    right: -5px;
-    bottom: -5px;
+    top: -5px; left: -5px; right: -5px; bottom: -5px;
     border-radius: 50%;
     border: 1px solid var(--primary-color);
     opacity: 0.3;
@@ -352,6 +341,28 @@ input[type="number"]:focus {
     box-shadow: 0 2px 10px rgba(178, 150, 125, 0.05);
 }
 
+/* Special Styling for Exosome Card */
+.advice-card.exosome-card {
+    background: var(--premium-bg);
+    border: 1px solid var(--premium-gold);
+    box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.advice-card.exosome-card::after {
+    content: 'Special Care';
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    font-size: 0.6rem;
+    color: var(--premium-gold);
+    border: 1px solid var(--premium-gold);
+    padding: 2px 6px;
+    border-radius: 20px;
+    letter-spacing: 0.1em;
+}
+
 .card-title {
     font-family: var(--font-main);
     color: var(--primary-color);
@@ -362,6 +373,12 @@ input[type="number"]:focus {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+}
+
+/* Exosome Card Title Color Overwrite */
+.exosome-card .card-title {
+    color: #8B6B4A; /* Slightly darker/richer gold */
+    border-bottom-color: var(--premium-gold);
 }
 
 .advice-list {
@@ -381,18 +398,15 @@ input[type="number"]:focus {
     font-weight: 500;
 }
 
+.exosome-text {
+    font-size: 0.95rem;
+    line-height: 1.8;
+    color: #5A4A3A;
+}
+
 @keyframes breathe {
-
-    0%,
-    100% {
-        transform: scale(1);
-        opacity: 0.3;
-    }
-
-    50% {
-        transform: scale(1.05);
-        opacity: 0.1;
-    }
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.05); opacity: 0.1; }
 }
 
 @keyframes fadeInUp {

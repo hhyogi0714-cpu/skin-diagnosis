@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const advicePhysical = document.getElementById('advice-physical');
     const adviceSkincare = document.getElementById('advice-skincare');
     const adviceFood = document.getElementById('advice-food');
+    const adviceExosome = document.getElementById('advice-exosome'); // New Element
 
     const retakeBtn = document.getElementById('retake-btn');
     const radarCanvas = document.getElementById('radarChart');
@@ -144,19 +145,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------
     function determineDiagnosisType() {
         const s = axisScores;
-        // Normalize scores if needed? 
-        // Assume axes have roughly equal max scores (approx 9 per axis if 3 questions * 3 pts)
-        // Some axes have 3 questions, some 4. Let's normalize to percentage or average.
 
-        // Define max scores based on questions.js distribution:
-        // firmness: Q1,2,3 (3 qs -> max 9)
-        // moisture: Q4,8,10 (3 qs -> max 9)
-        // brightness: Q7,9 (2 qs -> max 6) -> slightly less weight
-        // lifestyle: Q6,12,13,14 (4 qs -> max 12) -> heavy weight
-        // glycation: Q5,11,15 (3 qs -> max 9)
-
-        // Let's analyze high risk.
-        // Threshold for "High Risk" = > 50% of max score? 
+        // Define max scores based on questions.js distribution
         const isHigh = (score, max) => score >= (max * 0.5); // >= half bad
 
         const highFirmness = isHigh(s.firmness, 9);
@@ -179,7 +169,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (highBrightness && highGlycation) return 'spots_glycation';
 
         // 4. Single Risks (Priority Logic: highest ratio)
-        // Find simpler max ratio axis
         const ratios = {
             firmness: s.firmness / 9,
             moisture: s.moisture / 9,
@@ -191,14 +180,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxRatio = Math.max(...Object.values(ratios));
         const worstAxis = Object.keys(ratios).find(k => ratios[k] === maxRatio);
 
-        if (maxRatio < 0.3) return 'pre_aging'; // Low risk overall but not perfect
+        if (maxRatio < 0.3) return 'pre_aging'; // Low risk overall
 
         // Single Types mapping
         if (worstAxis === 'firmness') return 'sagging';
         if (worstAxis === 'brightness') return 'spots';
         if (worstAxis === 'moisture') return 'dryness';
         if (worstAxis === 'glycation') return 'glycation';
-        if (worstAxis === 'lifestyle') return 'pre_aging'; // Lifestyle issue but not yet skin issue? Or map to Aging Prev?
+        if (worstAxis === 'lifestyle') return 'pre_aging';
 
         return 'pre_aging'; // Fallback
     }
@@ -224,6 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
         adviceSkincare.innerHTML = advice.advice_skincare;
         adviceFood.innerHTML = advice.advice_food;
 
+        // Render Exosome Advice
+        if (adviceExosome && advice.advice_exosome) {
+            adviceExosome.textContent = advice.advice_exosome;
+        }
+
         // Render Chart
         drawRadarChart(axisScores);
 
@@ -233,6 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Chart Drawer
     function drawRadarChart(scores) {
+        if (!radarCanvas) return;
         const ctx = radarCanvas.getContext('2d');
         const width = radarCanvas.width;
         const height = radarCanvas.height;
@@ -253,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const angleStep = (Math.PI * 2) / axes.length;
 
-        // Draw Background Webs (Pentagon)
+        // Draw Background Webs
         ctx.strokeStyle = '#E6D2C4';
         ctx.lineWidth = 1;
         for (let level = 1; level <= 4; level++) {
@@ -281,13 +276,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const x = centerX + Math.cos(angle) * radius;
             const y = centerY + Math.sin(angle) * radius;
 
-            // Axis line
             ctx.beginPath();
             ctx.moveTo(centerX, centerY);
             ctx.lineTo(x, y);
             ctx.stroke();
 
-            // Label
             const labelX = centerX + Math.cos(angle) * (radius + 20);
             const labelY = centerY + Math.sin(angle) * (radius + 20);
             ctx.fillText(axes[i].label, labelX, labelY);
@@ -302,15 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < axes.length; i++) {
             const axis = axes[i];
             const score = scores[axis.key];
-            const ratio = score / axis.max; // 0 (good) to 1 (bad)
-            // But usually radar chart: Center is 0 (Good) or Center is 0 (Bad)?
-            // Conventionally: Center is 0, Outer is Max.
-            // In our scoring: 0 is Good, Max is Bad.
-            // If we want "Higher is Better" visual (usually better looking), we should invert.
-            // Let's plot "Health Score": (Max - Score) / Max.
-            // So Outer (1.0) = Perfect (Score 0), Center (0.0) = Bad (Score Max).
+            const ratio = score / axis.max;
 
-            const healthRatio = 1 - (ratio > 1 ? 1 : ratio); // Safety cap
+            // "Health Score": (Max - Score) / Max.
+            const healthRatio = 1 - (ratio > 1 ? 1 : ratio);
 
             const r = radius * healthRatio;
             const angle = i * angleStep - Math.PI / 2;
