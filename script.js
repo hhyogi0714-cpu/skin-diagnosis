@@ -17,8 +17,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Camera Elements
     const cameraFeed = document.getElementById('camera-feed');
+    const cameraPreviewImg = document.getElementById('camera-preview-img');
     const cameraPlaceholder = document.getElementById('camera-placeholder');
     const startCameraBtn = document.getElementById('start-camera-btn');
+    const nativeCameraBtn = document.getElementById('native-camera-btn');
+    const cameraFileInput = document.getElementById('camera-file-input');
     const faceGuide = document.querySelector('.face-guide');
     const cameraControls = document.querySelector('.camera-controls');
     const shutterBtn = document.getElementById('shutter-btn');
@@ -148,32 +151,58 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetCameraUI() {
         cameraPlaceholder.style.display = 'flex';
         cameraFeed.style.display = 'none';
+        cameraPreviewImg.style.display = 'none';
         faceGuide.style.display = 'none';
         cameraControls.style.display = 'none';
+        stopCamera();
     }
 
     // ------------------------------------------
     // Camera Logic
     // ------------------------------------------
 
-    // Explicit User Gesture Handler
+    // Explicit User Gesture Handler (Webcam)
     startCameraBtn.addEventListener('click', async () => {
-        // Reset message
         const note = document.querySelector('.camera-note');
         if (note) note.textContent = "カメラを起動しています...";
-
         await startCamera();
     });
 
+    // Native Camera/File Input Handler
+    nativeCameraBtn.addEventListener('click', () => {
+        cameraFileInput.click();
+    });
+
+    cameraFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                // Show preview image instead of video feed
+                cameraPreviewImg.src = e.target.result;
+                cameraPreviewImg.style.display = 'block';
+                cameraPlaceholder.style.display = 'none';
+                faceGuide.style.display = 'block'; // Keep guide for effect
+
+                // Show controls (to allow "scanning")
+                cameraControls.style.display = 'flex';
+
+                // Optional: Auto-scan after a delay to feel smooth
+                setTimeout(() => {
+                    finishDiagnosis(true);
+                }, 1500);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+
     async function startCamera() {
-        stopCamera(); // Ensure previous streams are closed
+        stopCamera();
 
         const constraintsVariants = [
-            // 1. Ideal: User facing, standard resolution
             { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
-            // 2. Fallback: User facing, no resolution constraint
             { video: { facingMode: 'user' }, audio: false },
-            // 3. Last Resort: Any video camera
             { video: true, audio: false }
         ];
 
@@ -181,27 +210,24 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 stream = await navigator.mediaDevices.getUserMedia(constraints);
                 onCameraSuccess(stream);
-                return; // Success!
+                return;
             } catch (err) {
                 console.warn("Camera attempt failed:", err.name, constraints);
                 if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    // Permission explicitly denied, no point trying other constraints
-                    alert("カメラのアクセスがブロックされています。\nブラウザの設定でサイトの設定を確認し、カメラを許可してください。\nもしくは、SafariやChromeなどの標準ブラウザで開き直してください。");
+                    alert("カメラの起動がブロックされました。「標準カメラアプリで撮影」ボタンをお試しください。");
                     finishDiagnosis(false);
                     return;
                 }
             }
         }
 
-        // If loop finishes without returning, all attempts failed (likely hardware or OS issue)
-        alert("カメラを起動できませんでした。\n他のアプリが使用中か、お使いの環境が対応していない可能性があります。\nこのまま診断結果に進みます。");
-        finishDiagnosis(false);
+        alert("カメラを起動できませんでした。「標準カメラアプリで撮影」ボタンをお試しください。");
+        // Don't auto finish, let them try the button
     }
 
     function onCameraSuccess(stream) {
         cameraFeed.srcObject = stream;
 
-        // Update UI
         cameraPlaceholder.style.display = 'none';
         cameraFeed.style.display = 'block';
         faceGuide.style.display = 'block';
