@@ -53,93 +53,91 @@
                     <div id="camera-placeholder" class="camera-placeholder">
                         <div
                             style="display: flex; flex-direction: column; gap: 1rem; width: 100%; align-items: center; padding: 1rem;">
-                            <!-- Method 1: App-like Inline Camera -->
-                            <button id="start-camera-crt-btn" class="primary-btn" style="width: 100%; padding: 1rem;">
-                                スキャン開始 (推奨)
+                            <h3 style="color: #6d5045; margin-bottom: 0.5rem; font-size: 1.1rem;">写真は診断の参考にのみ使用されます</h3>
+
+                            <!-- Option 1: File/Camera Select -->
+                            <button id="upload-photo-btn" class="primary-btn"
+                                style="width: 100%; padding: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <span style="font-size: 1.2rem;">📷</span> 顔写真を撮影/選択する
                             </button>
 
-                            <!-- Method 2: Native Camera Fallback -->
-                            <label for="camera-file-input" class="secondary-btn"
-                                style="width: 100%; padding: 0.8rem; text-align: center; border: 1px solid #fff; color: #fff; cursor: pointer;">
-                                通常カメラで撮影
-                            </label>
+                            <p style="color: #999; font-size: 0.8rem;">※カメラまたはアルバムから選択できます</p>
 
-                            <p style="color: #ccc; font-size: 0.8rem; margin-top: 0.5rem; text-align: center;">
-                                上手く起動しない場合は下のボタンをお試しください
-                            </p>
-                            <div id="camera-error-log"
-                                style="color: #ff6b6b; font-size: 0.7rem; display: none; white-space: pre-wrap;"></div>
+                            <!-- Option 2: Skip -->
+                            <button id="skip-photo-btn"
+                                style="background: none; border: 1px solid #ccc; padding: 0.8rem; width: 100%; border-radius: 50px; color: #888; margin-top: 1rem; cursor: pointer;">
+                                顔認証をしない（スキップ）
+                            </button>
                         </div>
 
-                        <input type="file" id="camera-file-input" accept="image/*" capture="user"
-                            style="display: none;">
+                        <!-- File Input (Standard behavior) -->
+                        <input type="file" id="camera-file-input" accept="image/*" style="display: none;">
                     </div>
-                    <img id="camera-preview-img"
-                        style="display: none; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);">
-                    <video id="camera-feed" autoplay playsinline muted></video>
-                    <div class="face-guide" style="display: none;"></div>
-                    <canvas id="camera-canvas" style="display: none;"></canvas>
-                </div>
 
-                <div class="camera-controls" style="display: none;">
-                    <button id="shutter-btn" class="shutter-btn"></button>
-                    <p class="camera-note">※ 画像はサーバーには保存されません</p>
+                    <!-- Preview Image only -->
+                    <img id="camera-preview-img" style="display: none; width: 100%; height: 100%; object-fit: cover;">
                 </div>
             </div>
-        </section>
 
-        <!-- Loading Screen -->
-        <section id="loading-screen" class="screen hidden">
-            <div class="content-wrapper">
-                <div class="loader"></div>
-                <p class="loading-text">肌データを分析中...</p>
+            <div class="camera-controls" style="display: none;">
+                <button id="shutter-btn" class="shutter-btn"></button>
+                <p class="camera-note">※ 画像はサーバーには保存されません</p>
             </div>
-        </section>
+    </div>
+    </section>
 
-        <!-- Result Screen -->
-        <section id="result-screen" class="screen hidden">
-            <div class="content-wrapper">
-                <p class="result-intro">あなたの肌年齢は...</p>
-                <div class="result-circle">
-                    <span id="result-age" class="result-age">--</span>
-                    <span class="age-unit">歳</span>
-                </div>
+    <!-- Loading Screen -->
+    <section id="loading-screen" class="screen hidden">
+        <div class="content-wrapper">
+            <div class="loader"></div>
+            <p class="loading-text">肌データを分析中...</p>
+        </div>
+    </section>
 
-                <!-- Radar Chart Section -->
-                <div class="chart-container">
-                    <canvas id="radarChart" width="300" height="300"></canvas>
-                </div>
+    <!-- Result Screen -->
+    <section id="result-screen" class="screen hidden">
+        <div class="content-wrapper">
+            <p class="result-intro">あなたの肌年齢は...</p>
+            <div class="result-circle">
+                <span id="result-age" class="result-age">--</span>
+                <span class="age-unit">歳</span>
+            </div>
 
-                <!-- Advice Section -->
-                <div id="advice-container" class="advice-container">
-                    <h3 id="advice-title" class="advice-title">診断タイトル</h3>
-                    <p id="advice-message" class="advice-message">メッセージ本文</p>
+            <!-- Radar Chart Section -->
+            <div class="chart-container">
+                <canvas id="radarChart" width="300" height="300"></canvas>
+            </div>
 
-                    <div class="advice-grid">
-                        <div class="advice-card">
-                            <h4 class="card-title">💆‍♀️ 身体的な対策</h4>
-                            <ul id="advice-physical" class="advice-list"></ul>
-                        </div>
-                        <div class="advice-card">
-                            <h4 class="card-title">🧴 おすすめスキンケア</h4>
-                            <ul id="advice-skincare" class="advice-list"></ul>
-                        </div>
-                        <div class="advice-card">
-                            <h4 class="card-title">🥗 おすすめの食べ物</h4>
-                            <ul id="advice-food" class="advice-list"></ul>
-                        </div>
+            <!-- Advice Section -->
+            <div id="advice-container" class="advice-container">
+                <h3 id="advice-title" class="advice-title">診断タイトル</h3>
+                <p id="advice-message" class="advice-message">メッセージ本文</p>
 
-                        <!-- Premium Exosome Advice -->
-                        <div class="advice-card exosome-card">
-                            <h4 class="card-title">✨ エクソソーム導入によるアプローチ</h4>
-                            <p id="advice-exosome" class="exosome-text"></p>
-                        </div>
+                <div class="advice-grid">
+                    <div class="advice-card">
+                        <h4 class="card-title">💆‍♀️ 身体的な対策</h4>
+                        <ul id="advice-physical" class="advice-list"></ul>
+                    </div>
+                    <div class="advice-card">
+                        <h4 class="card-title">🧴 おすすめスキンケア</h4>
+                        <ul id="advice-skincare" class="advice-list"></ul>
+                    </div>
+                    <div class="advice-card">
+                        <h4 class="card-title">🥗 おすすめの食べ物</h4>
+                        <ul id="advice-food" class="advice-list"></ul>
+                    </div>
+
+                    <!-- Premium Exosome Advice -->
+                    <div class="advice-card exosome-card">
+                        <h4 class="card-title">✨ エクソソーム導入によるアプローチ</h4>
+                        <p id="advice-exosome" class="exosome-text"></p>
                     </div>
                 </div>
-
-                <button id="retake-btn" class="secondary-btn">ホームに戻る</button>
             </div>
-        </section>
+
+            <button id="retake-btn" class="secondary-btn">ホームに戻る</button>
+        </div>
+    </section>
     </div>
     <script src="questions.js"></script>
     <script src="script.js"></script>

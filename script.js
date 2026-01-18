@@ -161,123 +161,70 @@ document.addEventListener('DOMContentLoaded', () => {
     // Camera Logic (Hybrid Strategy)
     // ------------------------------------------
 
-    const startCameraCrtBtn = document.getElementById('start-camera-crt-btn');
-    const cameraErrorLog = document.getElementById('camera-error-log');
+    const uploadPhotoBtn = document.getElementById('upload-photo-btn');
+    const skipPhotoBtn = document.getElementById('skip-photo-btn');
 
     // ------------------------------------------
-    // Camera Method 1: WebRTC (App-like)
+    // 1. Upload/Take Photo
     // ------------------------------------------
-    startCameraCrtBtn.addEventListener('click', async () => {
-        cameraErrorLog.style.display = 'none';
-        cameraErrorLog.textContent = "";
-        const note = document.querySelector('.camera-note');
-        if (note) note.textContent = "カメラを起動しています...";
+    uploadPhotoBtn.addEventListener('click', () => {
+        cameraFileInput.click();
+    });
 
-        try {
-            await startCameraWebRTC();
-        } catch (err) {
-            console.error(err);
-            if (note) note.textContent = "起動エラー";
+    // Handle File Selection
+    cameraFileInput.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
 
-            // Show error to user for troubleshooting
-            cameraErrorLog.style.display = 'block';
-            cameraErrorLog.textContent = "カメラ起動エラー: " + err.message + "\n「通常カメラで撮影」をお試しください。";
+            reader.onload = function (e) {
+                // Show preview
+                cameraPlaceholder.style.display = 'none';
+                cameraPreviewImg.src = e.target.result;
+                cameraPreviewImg.style.display = 'block';
 
-            // Note: We do NOT auto-fallback here to avoid confusion. User sees error and clicks other button.
+                // Show analyzing message
+                const note = document.querySelector('.camera-note');
+                if (note) note.textContent = "画像を解析しています...";
+
+                // Auto-progress
+                setTimeout(() => {
+                    finishDiagnosis(true);
+                }, 1500);
+            }
+            reader.readAsDataURL(file);
         }
     });
 
-    async function startCameraWebRTC() {
-        stopCamera();
-
-        // Check if API exists
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            throw new Error("このブラウザはWebカメラAPIに対応していません");
-        }
-
-        const constraintsVariants = [
-            { video: { facingMode: 'user' }, audio: false },
-            { video: true, audio: false }
-        ];
-
-        for (const constraints of constraintsVariants) {
-            try {
-                cameraPlaceholder.style.display = 'none';
-                cameraFeed.style.display = 'block';
-                cameraFeed.setAttribute('playsinline', '');
-
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-                cameraFeed.srcObject = stream;
-                // Wait for video to be ready
-                await new Promise((resolve) => {
-                    cameraFeed.onloadedmetadata = () => {
-                        resolve();
-                    };
-                });
-                await cameraFeed.play();
-
-                onCameraSuccess();
-                return;
-            } catch (err) {
-                console.warn("Constraint failed:", err);
-                // Clean up fail
-                cameraFeed.style.display = 'none';
-                cameraPlaceholder.style.display = 'flex';
-            }
-        }
-        throw new Error("カメラへのアクセスが拒否されたか、利用できません。");
-    }
-
-    function onCameraSuccess() {
-        cameraPlaceholder.style.display = 'none';
-        cameraFeed.style.display = 'block';
-        cameraPreviewImg.style.display = 'none';
-        faceGuide.style.display = 'block';
-        cameraControls.style.display = 'flex';
-
-        const note = document.querySelector('.camera-note');
-        if (note) note.textContent = "※ 画像はサーバーには保存されません";
-
-        // Crucial: Set srcObject AND play() explicitly
-        cameraFeed.srcObject = stream;
-        cameraFeed.onloadedmetadata = () => {
-            cameraFeed.play().catch(e => console.error("Play error:", e));
-        };
-    }
-
-    function showPreview(imageSrc) {
-        cameraPlaceholder.style.display = 'none';
-        cameraFeed.style.display = 'none';
-        cameraPreviewImg.src = imageSrc;
-        cameraPreviewImg.style.display = 'block';
-        faceGuide.style.display = 'block';
-        cameraControls.style.display = 'flex';
-
-        // Hide shutter button in preview mode (since we already have the image)
-        shutterBtn.style.display = 'none';
-    }
-
-    function stopCamera() {
-        if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-            stream = null;
-        }
-    }
-
-    shutterBtn.addEventListener('click', () => {
-        if (stream) {
-            finishDiagnosis(true); // Analyze
-        } else {
+    // ------------------------------------------
+    // 2. Skip Face Auth
+    // ------------------------------------------
+    skipPhotoBtn.addEventListener('click', () => {
+        if (confirm("顔写真なしで診断結果を表示しますか？")) {
             finishDiagnosis(false);
         }
     });
+
+    // function stopCamera() { // Removed as per instruction
+    //     if (stream) {
+    //         stream.getTracks().forEach(track => track.stop());
+    //         stream = null;
+    //     }
+    // } // Removed as per instruction
+
+    // shutterBtn.addEventListener('click', () => { // Removed as per instruction
+    //     if (stream) {
+    //         finishDiagnosis(true); // Analyze
+    //     } else {
+    //         finishDiagnosis(false);
+    //     }
+    // }); // Removed as per instruction
 
     // ------------------------------------------
     // Result Logic
     // ------------------------------------------
     function finishDiagnosis(withCameraAnalysis) {
-        stopCamera();
+        // stopCamera(); // Removed as per instruction
         progressFill.style.width = '100%';
         showScreen(loadingScreen);
 
