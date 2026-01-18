@@ -158,36 +158,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Explicit User Gesture Handler
     startCameraBtn.addEventListener('click', async () => {
+        // Reset message
+        const note = document.querySelector('.camera-note');
+        if (note) note.textContent = "カメラを起動しています...";
+
         await startCamera();
     });
 
     async function startCamera() {
-        try {
-            // First try with ideal constraints
-            stream = await navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'user',
-                    width: { ideal: 640 },
-                    height: { ideal: 480 }
-                },
-                audio: false
-            });
-            onCameraSuccess(stream);
-        } catch (err) {
-            console.warn("User facing camera failed, trying fallback...", err);
+        stopCamera(); // Ensure previous streams are closed
+
+        const constraintsVariants = [
+            // 1. Ideal: User facing, standard resolution
+            { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+            // 2. Fallback: User facing, no resolution constraint
+            { video: { facingMode: 'user' }, audio: false },
+            // 3. Last Resort: Any video camera
+            { video: true, audio: false }
+        ];
+
+        for (const constraints of constraintsVariants) {
             try {
-                // Fallback: try without excessive constraints
-                stream = await navigator.mediaDevices.getUserMedia({
-                    video: true,
-                    audio: false
-                });
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
                 onCameraSuccess(stream);
-            } catch (err2) {
-                console.error("Camera access denied:", err2);
-                alert("カメラへのアクセスが許可されませんでした。設定を確認してください。\n診断は続行しますが、画像解析はスキップされます。");
-                finishDiagnosis(false);
+                return; // Success!
+            } catch (err) {
+                console.warn("Camera attempt failed:", err.name, constraints);
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    // Permission explicitly denied, no point trying other constraints
+                    alert("カメラのアクセスがブロックされています。\nブラウザの設定でサイトの設定を確認し、カメラを許可してください。\nもしくは、SafariやChromeなどの標準ブラウザで開き直してください。");
+                    finishDiagnosis(false);
+                    return;
+                }
             }
         }
+
+        // If loop finishes without returning, all attempts failed (likely hardware or OS issue)
+        alert("カメラを起動できませんでした。\n他のアプリが使用中か、お使いの環境が対応していない可能性があります。\nこのまま診断結果に進みます。");
+        finishDiagnosis(false);
     }
 
     function onCameraSuccess(stream) {
@@ -198,6 +206,9 @@ document.addEventListener('DOMContentLoaded', () => {
         cameraFeed.style.display = 'block';
         faceGuide.style.display = 'block';
         cameraControls.style.display = 'flex';
+
+        const note = document.querySelector('.camera-note');
+        if (note) note.textContent = "※ 画像はサーバーには保存されません";
     }
 
     function stopCamera() {
