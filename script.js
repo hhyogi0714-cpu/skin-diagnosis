@@ -161,23 +161,54 @@ document.addEventListener('DOMContentLoaded', () => {
     // Camera Logic (Hybrid Strategy)
     // ------------------------------------------
 
+    async function startCameraWebRTC() {
+        stopCamera();
+
+        const constraintsVariants = [
+            // 1. Simplest User Facing (Most reliable)
+            { video: { facingMode: 'user' }, audio: false },
+            // 2. Ideal resolution (Secondary attempt)
+            { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
+            // 3. Fallback to any camera
+            { video: true, audio: false }
+        ];
+
+        for (const constraints of constraintsVariants) {
+            try {
+                // Ensure video element is visible and ready
+                cameraPlaceholder.style.display = 'none';
+                cameraFeed.style.display = 'block';
+                cameraFeed.setAttribute('playsinline', ''); // Force attribute
+
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                onCameraSuccess(stream);
+                return; // Success
+            } catch (err) {
+                console.warn("Constraint failed:", constraints, err);
+
+                // Reset UI for next attempt
+                cameraFeed.style.display = 'none';
+                cameraPlaceholder.style.display = 'flex';
+
+                // If this was the last constraint and it failed, throw error
+            }
+        }
+
+        throw new Error("All WebRTC attempts failed");
+    }
+
     // Unified Camera Handler
     startCameraBtn.addEventListener('click', async () => {
         const note = document.querySelector('.camera-note');
         if (note) note.textContent = "カメラを起動しています...";
 
-        // Try WebRTC Camera first (Better UX)
         try {
             await startCameraWebRTC();
         } catch (err) {
             console.log("WebRTC failed, switching to native input...", err);
-            // If WebRTC fails (permission denied or unsupported), 
-            // IMMEDIATELY trigger the native file input as fallback.
-            // This satisfies "works on any phone" requirement.
+            // Silently trigger fallback without alert (User preference: "Just work")
             cameraFileInput.click();
-
-            // Reset UI message
-            if (note) note.textContent = "カメラまたはフォルダから写真を選択してください";
+            if (note) note.textContent = "写真を選択または撮影してください";
         }
     });
 
@@ -199,38 +230,6 @@ document.addEventListener('DOMContentLoaded', () => {
             reader.readAsDataURL(file);
         }
     });
-
-    async function startCameraWebRTC() {
-        stopCamera();
-
-        const constraintsVariants = [
-            // Try explicit user facing first
-            { video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, audio: false },
-            // Try loose user facing
-            { video: { facingMode: 'user' }, audio: false },
-            // Try anything (environment or user)
-            { video: true, audio: false }
-        ];
-
-        for (const constraints of constraintsVariants) {
-            try {
-                // Pre-show the video element to satisfy some browser layout requirements
-                cameraPlaceholder.style.display = 'none';
-                cameraFeed.style.display = 'block';
-
-                stream = await navigator.mediaDevices.getUserMedia(constraints);
-                onCameraSuccess(stream);
-                return; // Success
-            } catch (err) {
-                console.warn("Constraint failed:", constraints, err);
-                // Revert UI if this attempt failed and we are going to try next
-                cameraFeed.style.display = 'none';
-                cameraPlaceholder.style.display = 'flex';
-            }
-        }
-
-        throw new Error("All WebRTC attempts failed");
-    }
 
     function onCameraSuccess(stream) {
         // UI is already updated in startCameraWebRTC, but ensure final state
