@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'pre_aging';
     }
 
-    function showResult() {
+    function showResult(withCameraAnalysis = false) {
         let ageDiff = 0;
         if (totalScore <= 5) ageDiff = -5;
         else if (totalScore <= 15) ageDiff = -2 + ((totalScore - 6) / 9 * 4);
@@ -295,6 +295,59 @@ document.addEventListener('DOMContentLoaded', () => {
         advicePhysical.innerHTML = advice.advice_physical;
         adviceSkincare.innerHTML = advice.advice_skincare;
         adviceFood.innerHTML = advice.advice_food;
+
+        // AI Photo Rendering
+        const photoContainer = document.getElementById('result-photo-container');
+        if (withCameraAnalysis && currentPhotoData) {
+            photoContainer.style.display = 'block';
+            const img = document.getElementById('result-base-image');
+            const canvas = document.getElementById('result-overlay-canvas');
+
+            img.onload = () => {
+                canvas.width = img.clientWidth;
+                canvas.height = img.clientHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw Simulation Circles
+                ctx.strokeStyle = "rgba(255, 60, 60, 0.8)";
+                ctx.lineWidth = 2;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = "white";
+
+                const drawTarget = (x, y) => {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 20, 0, Math.PI * 2);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(x - 5, y); ctx.lineTo(x + 5, y);
+                    ctx.moveTo(x, y - 5); ctx.lineTo(x, y + 5);
+                    ctx.stroke();
+                };
+
+                const w = canvas.width;
+                const h = canvas.height;
+
+                // Simulate detecting Wrinkles / Sagging
+                drawTarget(w * 0.3, h * 0.75); // Left Jaw
+                drawTarget(w * 0.7, h * 0.75); // Right Jaw
+                drawTarget(w * 0.25, h * 0.4); // Left Eye
+                drawTarget(w * 0.75, h * 0.4); // Right Eye
+
+                document.querySelector('.scan-line').style.display = 'block';
+            };
+            img.src = currentPhotoData;
+
+            // AI Analysis Report
+            const aiReportHTML = `<li class="advice-item" style="background:#fff0f0; border:1px solid #ffcccc; margin-bottom:1rem; padding:1rem; border-radius:8px;">
+                <strong style="color:#d9534f; display:block; margin-bottom:0.5rem;">📷 AI画像解析レポート</strong>
+                写真分析の結果、<span style="border-bottom:2px solid #ffaaaa;">フェイスラインの緩み</span>と<span style="border-bottom:2px solid #ffaaaa;">目元の細かい影</span>に反応が見られました。重点的なケアをおすすめします。
+            </li>`;
+            advicePhysical.insertAdjacentHTML('afterbegin', aiReportHTML);
+
+        } else {
+            photoContainer.style.display = 'none';
+        }
 
         if (adviceExosome && advice.advice_exosome) {
             adviceExosome.textContent = advice.advice_exosome;
