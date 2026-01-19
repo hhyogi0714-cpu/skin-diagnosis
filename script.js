@@ -325,20 +325,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 const w = canvas.width;
                 const h = canvas.height;
 
-                // Simulate detecting Wrinkles / Sagging
-                drawTarget(w * 0.3, h * 0.75); // Left Jaw
-                drawTarget(w * 0.7, h * 0.75); // Right Jaw
-                drawTarget(w * 0.25, h * 0.4); // Left Eye
-                drawTarget(w * 0.75, h * 0.4); // Right Eye
+                // ----------------------------------------------------
+                // Expanded AI Analysis Repertoire (Female Concerns)
+                // ----------------------------------------------------
+                const concerns = [
+                    {
+                        id: 'sagging',
+                        label: 'フェイスラインの緩み',
+                        draw: () => { drawTarget(w * 0.25, h * 0.75); drawTarget(w * 0.75, h * 0.75); } // Jaw
+                    },
+                    {
+                        id: 'smile_lines',
+                        label: 'ほうれい線の影',
+                        draw: () => { drawTarget(w * 0.35, h * 0.65); drawTarget(w * 0.65, h * 0.65); } // Mouth corners
+                    },
+                    {
+                        id: 'eyes',
+                        label: '目元のちりめんジワ',
+                        draw: () => { drawTarget(w * 0.25, h * 0.45); drawTarget(w * 0.75, h * 0.45); } // Under eyes
+                    },
+                    {
+                        id: 'pores',
+                        label: '頬の毛穴開き',
+                        draw: () => { drawTarget(w * 0.4, h * 0.55); drawTarget(w * 0.6, h * 0.55); } // Cheeks
+                    },
+                    {
+                        id: 'spots',
+                        label: '潜在的なシミ・くすみ',
+                        draw: () => { drawTarget(w * 0.3, h * 0.5); drawTarget(w * 0.8, h * 0.6); } // Random cheek spots
+                    }
+                ];
 
-                document.querySelector('.scan-line').style.display = 'block';
+                // Randomly select 2 unique concerns to display
+                // (Fisher-Yates shuffle simulation)
+                const shuffled = concerns.sort(() => 0.5 - Math.random());
+                const selected = shuffled.slice(0, 2);
+
+                // Execute drawing
+                selected.forEach(c => c.draw());
+
+                // Generate Dynamic Report Text
+                const reportText = `写真分析の結果、<span style="border-bottom:2px solid #ffaaaa;">${selected[0].label}</span>と<span style="border-bottom:2px solid #ffaaaa;">${selected[1].label}</span>に反応が見られました。重点的なケアをおすすめします。`;
+
+                // Update DOM (Wait for image load context)
+                setTimeout(() => {
+                    const reportContainer = document.getElementById('ai-report-text');
+                    if (reportContainer) reportContainer.innerHTML = reportText;
+                }, 0);
             };
             img.src = currentPhotoData;
 
-            // AI Analysis Report
+            // AI Analysis Report Setup (Insert container only)
+            // We use a specific ID to update the text content dynamically above
             const aiReportHTML = `<li class="advice-item" style="background:#fff0f0; border:1px solid #ffcccc; margin-bottom:1rem; padding:1rem; border-radius:8px;">
                 <strong style="color:#d9534f; display:block; margin-bottom:0.5rem;">📷 AI画像解析レポート</strong>
-                写真分析の結果、<span style="border-bottom:2px solid #ffaaaa;">フェイスラインの緩み</span>と<span style="border-bottom:2px solid #ffaaaa;">目元の細かい影</span>に反応が見られました。重点的なケアをおすすめします。
+                <p id="ai-report-text" style="margin:0;">分析中...</p>
             </li>`;
             advicePhysical.insertAdjacentHTML('afterbegin', aiReportHTML);
 
