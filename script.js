@@ -167,6 +167,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------
     // 1. Upload/Take Photo
     // ------------------------------------------
+    let currentPhotoData = null; // Store photo data
+
+    // ------------------------------------------
+    // 1. Upload/Take Photo
+    // ------------------------------------------
     uploadPhotoBtn.addEventListener('click', () => {
         cameraFileInput.click();
     });
@@ -178,6 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const reader = new FileReader();
 
             reader.onload = function (e) {
+                currentPhotoData = e.target.result; // Save for result
+
                 // Show preview
                 cameraPlaceholder.style.display = 'none';
                 cameraPreviewImg.src = e.target.result;
@@ -199,32 +206,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // ------------------------------------------
     // 2. Skip Face Auth
     // ------------------------------------------
+    // ------------------------------------------
+    // 2. Skip Face Auth
+    // ------------------------------------------
     skipPhotoBtn.addEventListener('click', () => {
         if (confirm("顔写真なしで診断結果を表示しますか？")) {
+            currentPhotoData = null;
             finishDiagnosis(false);
         }
     });
 
-    // function stopCamera() { // Removed as per instruction
-    //     if (stream) {
-    //         stream.getTracks().forEach(track => track.stop());
-    //         stream = null;
-    //     }
-    // } // Removed as per instruction
-
-    // shutterBtn.addEventListener('click', () => { // Removed as per instruction
-    //     if (stream) {
-    //         finishDiagnosis(true); // Analyze
-    //     } else {
-    //         finishDiagnosis(false);
-    //     }
-    // }); // Removed as per instruction
-
     // ------------------------------------------
     // Result Logic
     // ------------------------------------------
+    // (Removed commented out obsolete code)
+
     function finishDiagnosis(withCameraAnalysis) {
-        // stopCamera(); // Removed as per instruction
         progressFill.style.width = '100%';
         showScreen(loadingScreen);
 
@@ -234,7 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 totalScore += mockAdjustment;
                 if (totalScore < 0) totalScore = 0;
             }
-            showResult();
+            showResult(withCameraAnalysis); // Pass flag
         }, 3000);
     }
 
