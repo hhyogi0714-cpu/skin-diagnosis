@@ -342,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     {
                         id: 'eyes',
                         label: '目元のちりめんジワ',
-                        draw: () => { drawTarget(w * 0.25, h * 0.45); drawTarget(w * 0.75, h * 0.45); } // Under eyes
+                        draw: () => { drawTarget(w * 0.2, h * 0.45); drawTarget(w * 0.8, h * 0.45); } // Outer eyes
                     },
                     {
                         id: 'pores',
@@ -353,11 +353,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         id: 'spots',
                         label: '潜在的なシミ・くすみ',
                         draw: () => { drawTarget(w * 0.3, h * 0.5); drawTarget(w * 0.8, h * 0.6); } // Random cheek spots
+                    },
+                    {
+                        id: 'forehead',
+                        label: '額の乾燥小ジワ',
+                        draw: () => { drawTarget(w * 0.5, h * 0.25); } // Forehead center
+                    },
+                    {
+                        id: 'glabellar',
+                        label: '眉間の表情クセ',
+                        draw: () => { drawTarget(w * 0.5, h * 0.35); } // Between eyebrows
+                    },
+                    {
+                        id: 'nose',
+                        label: '小鼻の毛穴・赤み',
+                        draw: () => { drawTarget(w * 0.5, h * 0.6); } // Nose tip
+                    },
+                    {
+                        id: 'dark_circles',
+                        label: '目の下のクマ',
+                        draw: () => { drawTarget(w * 0.3, h * 0.48); drawTarget(w * 0.7, h * 0.48); } // Under eyes
                     }
                 ];
 
                 // Randomly select 2 unique concerns to display
-                // (Fisher-Yates shuffle simulation)
                 const shuffled = concerns.sort(() => 0.5 - Math.random());
                 const selected = shuffled.slice(0, 2);
 
